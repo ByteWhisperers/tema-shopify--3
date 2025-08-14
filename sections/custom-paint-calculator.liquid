@@ -1,0 +1,148 @@
+{{ 'custom-styles.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+<div class="section-{{ section.id }}-padding">
+  <div class="page-width">
+    <div class="paint-calculator">
+      <h3>{{ section.settings.heading | default: 'Calculadora de Tinta' }}</h3>
+      <p>{{ section.settings.description | default: 'Calcule a quantidade de tinta necessária para o seu projeto:' }}</p>
+      
+      <div class="calculator-form">
+        <div class="form-group">
+          <label for="wall-height-{{ section.id }}">Altura da Parede (m)</label>
+          <input type="number" id="wall-height-{{ section.id }}" step="0.1" min="0.1" placeholder="2.5">
+        </div>
+        
+        <div class="form-group">
+          <label for="wall-width-{{ section.id }}">Largura da Parede (m)</label>
+          <input type="number" id="wall-width-{{ section.id }}" step="0.1" min="0.1" placeholder="4.0">
+        </div>
+        
+        <div class="form-group">
+          <label for="coats-number-{{ section.id }}">Número de Demãos</label>
+          <input type="number" id="coats-number-{{ section.id }}" min="1" value="2">
+        </div>
+        
+        <button type="button" class="calculate-btn" onclick="calculatePaintStandalone('{{ section.id }}')">Calcular</button>
+      </div>
+      
+      <div class="calculator-result" id="paint-result-{{ section.id }}">
+        <p id="result-text-{{ section.id }}"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function calculatePaintStandalone(sectionId) {
+    const height = parseFloat(document.getElementById(`wall-height-${sectionId}`).value);
+    const width = parseFloat(document.getElementById(`wall-width-${sectionId}`).value);
+    const coats = parseInt(document.getElementById(`coats-number-${sectionId}`).value);
+    
+    // Valores padrão caso não sejam fornecidos
+    const rendimento = {{ section.settings.rendimento_tinta | default: 10 }};
+    const tamanhoLata = {{ section.settings.tamanho_lata | default: 3.6 }};
+    
+    if (!height || !width || !coats) {
+      alert('Por favor, preencha todos os campos.');
+      return;
+    }
+    
+    const area = height * width;
+    const areaTotal = area * coats;
+    const litrosNecessarios = areaTotal / rendimento;
+    const latasNecessarias = Math.ceil(litrosNecessarios / tamanhoLata);
+    
+    const resultDiv = document.getElementById(`paint-result-${sectionId}`);
+    const resultText = document.getElementById(`result-text-${sectionId}`);
+    
+    resultText.innerHTML = `
+      <strong>Resultado:</strong><br>
+      Área total: ${area.toFixed(1)} m²<br>
+      Área com demãos: ${areaTotal.toFixed(1)} m²<br>
+      Litros necessários: ${litrosNecessarios.toFixed(1)}L<br>
+      <strong>Você precisará de ${latasNecessarias} lata(s) de ${tamanhoLata}L</strong>
+    `;
+    
+    resultDiv.classList.add('show');
+  }
+</script>
+
+{% schema %}
+{
+  "name": "Calculadora de Tinta",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "Calculadora de Tinta",
+      "label": "Título da Seção"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "default": "Calcule a quantidade de tinta necessária para o seu projeto:",
+      "label": "Descrição"
+    },
+    {
+      "type": "number",
+      "id": "rendimento_tinta",
+      "default": 10,
+      "label": "Rendimento da Tinta (m² por litro)",
+      "info": "Quantos metros quadrados um litro de tinta cobre"
+    },
+    {
+      "type": "number",
+      "id": "tamanho_lata",
+      "default": 3.6,
+      "step": 0.1,
+      "label": "Tamanho da Lata (litros)",
+      "info": "Capacidade em litros de cada lata"
+    },
+    {
+      "type": "header",
+      "content": "Configurações de Espaçamento"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Espaçamento Superior",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Espaçamento Inferior",
+      "default": 36
+    }
+  ],
+  "presets": [
+    {
+      "name": "Calculadora de Tinta"
+    }
+  ]
+}
+{% endschema %}

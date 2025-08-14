@@ -1,0 +1,304 @@
+/* --- INÍCIO DO custom-styles.css --- */
+
+/* 1. Tipografia */
+/* Use as fontes 'Montserrat' para títulos e 'Open Sans' para corpo de texto. */
+/* Assuma que as fontes foram importadas via Theme Settings ou Google Fonts. */
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700; /* Negrito para títulos */
+}
+
+body, p, a, li, input, textarea, select {
+  font-family: 'Open Sans', sans-serif;
+}
+
+/* 2. Paleta de Cores Principal */
+:root {
+  --color-primary-accent: #FFC107; /* Amarelo Construção para CTAs e destaques */
+  --color-dark-background: #2c3e50;  /* Azul Marinho/Cinza Escuro para fundos e texto */
+  --color-light-background: #f4f6f8; /* Cinza Muito Claro para fundos de seção */
+  --color-text-primary: #34495e;     /* Cinza Escuro para texto principal */
+  --color-text-secondary: #7f8c8d;   /* Cinza Médio para texto secundário */
+  --color-border: #dfe4ea;           /* Cinza Claro para bordas */
+}
+
+/* 3. Aplicação das Cores */
+body {
+  background-color: #ffffff;
+  color: var(--color-text-primary);
+}
+
+/* Botões e Links de Ação (Call-to-Action) */
+.button--primary, a.button--primary {
+  background-color: var(--color-primary-accent);
+  color: var(--color-dark-background);
+  border: 1px solid var(--color-primary-accent);
+  transition: all 0.3s ease;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.button--primary:hover, a.button--primary:hover {
+  background-color: var(--color-dark-background);
+  color: var(--color-primary-accent);
+  border-color: var(--color-dark-background);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Color Swatches Styling */
+.color-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 15px 0;
+}
+
+.color-swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid var(--color-border);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.color-swatch:hover {
+  border-color: var(--color-primary-accent);
+  transform: scale(1.1);
+}
+
+.color-swatch.selected {
+  border-color: var(--color-primary-accent);
+  box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.3);
+}
+
+.color-swatch::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E") no-repeat center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.color-swatch.selected::after {
+  opacity: 1;
+}
+
+/* Product Tabs Styling */
+.product-tabs {
+  margin: 30px 0;
+}
+
+.tab-buttons {
+  display: flex;
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: 20px;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 15px 20px;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+  color: var(--color-text-primary);
+}
+
+.tab-button.active {
+  color: var(--color-primary-accent);
+  border-bottom-color: var(--color-primary-accent);
+}
+
+.tab-content {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Paint Calculator Styling */
+.paint-calculator {
+  background: var(--color-light-background);
+  padding: 30px;
+  border-radius: 10px;
+  margin: 30px 0;
+  border: 1px solid var(--color-border);
+}
+
+.paint-calculator h3 {
+  color: var(--color-dark-background);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.calculator-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--color-text-primary);
+}
+
+.form-group input {
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.calculate-btn {
+  grid-column: 1 / -1;
+  background-color: var(--color-primary-accent);
+  color: var(--color-dark-background);
+  border: none;
+  padding: 15px;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.calculate-btn:hover {
+  background-color: var(--color-dark-background);
+  color: var(--color-primary-accent);
+}
+
+.calculator-result {
+  background: white;
+  padding: 20px;
+  border-radius: 5px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--color-dark-background);
+  border: 2px solid var(--color-primary-accent);
+  margin-top: 15px;
+  display: none;
+}
+
+.calculator-result.show {
+  display: block;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Cross-sell Section Styling */
+.cross-sell-section {
+  margin: 40px 0;
+  padding: 30px;
+  background: var(--color-light-background);
+  border-radius: 10px;
+}
+
+.cross-sell-title {
+  text-align: center;
+  color: var(--color-dark-background);
+  margin-bottom: 30px;
+}
+
+.cross-sell-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.cross-sell-item {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  border: 1px solid var(--color-border);
+  transition: all 0.3s ease;
+}
+
+.cross-sell-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.cross-sell-item img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.cross-sell-item h4 {
+  margin-bottom: 10px;
+  color: var(--color-text-primary);
+}
+
+.cross-sell-item .price {
+  font-weight: 600;
+  color: var(--color-primary-accent);
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .tab-buttons {
+    flex-direction: column;
+  }
+  
+  .tab-button {
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    border-right: none;
+  }
+  
+  .tab-button.active {
+    border-bottom-color: var(--color-primary-accent);
+    border-right: 3px solid var(--color-primary-accent);
+  }
+  
+  .calculator-form {
+    grid-template-columns: 1fr;
+  }
+  
+  .cross-sell-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .color-swatches {
+    justify-content: center;
+  }
+}
+
+/* --- FIM DO custom-styles.css --- */

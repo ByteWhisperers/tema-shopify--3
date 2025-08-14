@@ -1,0 +1,187 @@
+{% comment %}
+  Renders product variant options
+
+  Accepts:
+  - product: {Object} Product object
+  - option: {Object} Option object
+  - block: {Object} Block object
+
+  Usage:
+  {% render 'product-variant-options', product: product, option: option, block: block %}
+{% endcomment %}
+
+{%- liquid
+  assign variants_available_arr = product.variants | map: 'available'
+  assign variants_option1_arr = product.variants | map: 'option1'
+  assign variants_option2_arr = product.variants | map: 'option2'
+  assign variants_option3_arr = product.variants | map: 'option3'
+-%}
+
+{%- if option.name == 'Cor' or option.name == 'Color' -%}
+  {%- comment -%} Color Swatches Implementation {%- endcomment -%}
+  <div class="color-swatches" data-option-index="{{ option.position | minus: 1 }}">
+    {%- for value in option.values -%}
+      {%- liquid
+        assign option_disabled = true
+        for option1_name in variants_option1_arr
+          case option.position
+            when 1
+              if variants_option1_arr[forloop.index0] == value and variants_available_arr[forloop.index0]
+                assign option_disabled = false
+              endif
+            when 2
+              if option1_name == product.selected_or_first_available_variant.option1 and variants_option2_arr[forloop.index0] == value and variants_available_arr[forloop.index0]
+                assign option_disabled = false
+              endif
+            when 3
+              if option1_name == product.selected_or_first_available_variant.option1 and variants_option2_arr[forloop.index0] == product.selected_or_first_available_variant.option2 and variants_option3_arr[forloop.index0] == value and variants_available_arr[forloop.index0]
+                assign option_disabled = false
+              endif
+          endcase
+        endfor
+      -%}
+
+      {%- comment -%} Get color from metafield or use default {%- endcomment -%}
+      {%- assign color_hex = '' -%}
+      {%- for variant in product.variants -%}
+        {%- case option.position -%}
+          {%- when 1 -%}
+            {%- if variant.option1 == value -%}
+              {%- assign color_hex = variant.metafields.custom.color_hex -%}
+              {%- break -%}
+            {%- endif -%}
+          {%- when 2 -%}
+            {%- if variant.option2 == value -%}
+              {%- assign color_hex = variant.metafields.custom.color_hex -%}
+              {%- break -%}
+            {%- endif -%}
+          {%- when 3 -%}
+            {%- if variant.option3 == value -%}
+              {%- assign color_hex = variant.metafields.custom.color_hex -%}
+              {%- break -%}
+            {%- endif -%}
+        {%- endcase -%}
+      {%- endfor -%}
+
+      {%- unless color_hex != blank -%}
+        {%- assign color_hex = value | downcase -%}
+      {%- endunless -%}
+
+      <input
+        type="radio"
+        id="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}"
+        name="{{ option.name }}"
+        value="{{ value | escape }}"
+        form="{{ product_form_id }}"
+        {% if option.selected_value == value %}
+          checked
+        {% endif %}
+        {% if option_disabled %}
+          class="disabled"
+        {% endif %}
+        style="display: none;"
+      >
+      <label
+        for="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}"
+        class="color-swatch{% if option.selected_value == value %} selected{% endif %}{% if option_disabled %} disabled{% endif %}"
+        style="background-color: {{ color_hex }};"
+        title="{{ value }}"
+        data-variant-option="{{ value }}"
+        data-option-position="{{ option.position }}"
+      >
+        <span class="visually-hidden">{{ value }}</span>
+      </label>
+    {%- endfor -%}
+  </div>
+{%- else -%}
+  {%- comment -%} Default variant options for non-color variants {%- endcomment -%}
+  {%- for value in option.values -%}
+    {%- liquid
+      assign option_disabled = true
+
+      for option1_name in variants_option1_arr
+        case option.position
+          when 1
+            if variants_option1_arr[forloop.index0] == value and variants_available_arr[forloop.index0]
+              assign option_disabled = false
+            endif
+          when 2
+            if option1_name == product.selected_or_first_available_variant.option1 and variants_option2_arr[forloop.index0] == value and variants_available_arr[forloop.index0]
+              assign option_disabled = false
+            endif
+          when 3
+            if option1_name == product.selected_or_first_available_variant.option1 and variants_option2_arr[forloop.index0] == product.selected_or_first_available_variant.option2 and variants_option3_arr[forloop.index0] == value and variants_available_arr[forloop.index0]
+              assign option_disabled = false
+            endif
+        endcase
+      endfor
+    -%}
+
+    <input
+      type="radio"
+      id="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}"
+      name="{{ option.name }}"
+      value="{{ value | escape }}"
+      form="{{ product_form_id }}"
+      {% if option.selected_value == value %}
+        checked
+      {% endif %}
+      {% if option_disabled %}
+        class="disabled"
+      {% endif %}
+    >
+    <label for="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}">
+      {{ value -}}
+      <span class="visually-hidden">{{ 'products.product.variant_sold_out_or_unavailable' | t }}</span>
+    </label>
+  {%- endfor -%}
+{%- endif -%}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Color swatch functionality
+  const colorSwatches = document.querySelectorAll('.color-swatch');
+  
+  colorSwatches.forEach(function(swatch) {
+    swatch.addEventListener('click', function() {
+      const optionPosition = this.dataset.optionPosition;
+      const variantOption = this.dataset.variantOption;
+      
+      // Remove selected class from all swatches in this option group
+      const optionSwatches = document.querySelectorAll(`[data-option-position="${optionPosition}"]`);
+      optionSwatches.forEach(function(s) {
+        s.classList.remove('selected');
+      });
+      
+      // Add selected class to clicked swatch
+      this.classList.add('selected');
+      
+      // Find and update the corresponding variant image
+      const product = JSON.parse(document.querySelector('variant-radios script[type="application/json"], variant-selects script[type="application/json"]').textContent);
+      
+      // Find variant that matches the selected option
+      const matchingVariant = product.find(function(variant) {
+        switch(parseInt(optionPosition)) {
+          case 1:
+            return variant.option1 === variantOption;
+          case 2:
+            return variant.option2 === variantOption;
+          case 3:
+            return variant.option3 === variantOption;
+          default:
+            return false;
+        }
+      });
+      
+      if (matchingVariant && matchingVariant.featured_image) {
+        // Update main product image
+        const mainImage = document.querySelector('.product__media img');
+        if (mainImage) {
+          mainImage.src = matchingVariant.featured_image.src;
+          mainImage.alt = matchingVariant.featured_image.alt || matchingVariant.name;
+        }
+      }
+    });
+  });
+});
+</script>

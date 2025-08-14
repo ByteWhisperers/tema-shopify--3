@@ -1,0 +1,216 @@
+{{ 'custom-styles.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+{%- liquid
+  assign current_product = product
+  assign cross_sell_tag = ''
+  
+  # Procura por uma tag que comece com "complemento-"
+  for tag in current_product.tags
+    if tag contains 'complemento-'
+      assign cross_sell_tag = tag
+      break
+    endif
+  endfor
+  
+  # Se encontrou uma tag de complemento, busca outros produtos com a mesma tag
+  assign cross_sell_products = collections.all.products | where: 'tags', cross_sell_tag
+  assign filtered_products = cross_sell_products | where: 'available', true
+  
+  # Remove o produto atual da lista
+  assign final_cross_sell = ''
+  assign final_cross_sell_array = ''
+  for cross_product in filtered_products
+    unless cross_product.id == current_product.id
+      if final_cross_sell_array.size < 3
+        assign final_cross_sell_array = final_cross_sell_array | append: cross_product.id | append: ','
+      endif
+    endunless
+  endfor
+-%}
+
+{%- if cross_sell_tag != blank and final_cross_sell_array != blank -%}
+  <div class="section-{{ section.id }}-padding">
+    <div class="page-width">
+      <div class="cross-sell-section">
+        <h3 class="cross-sell-title">{{ section.settings.heading | default: 'Compre Junto' }}</h3>
+        <div class="cross-sell-grid">
+          {%- assign product_ids = final_cross_sell_array | split: ',' -%}
+          {%- for product_id in product_ids limit: 3 -%}
+            {%- if product_id != blank -%}
+              {%- assign cross_product = collections.all.products | where: 'id', product_id | first -%}
+              {%- if cross_product and cross_product.available -%}
+                <div class="cross-sell-item">
+                  {%- if cross_product.featured_image -%}
+                    <a href="{{ cross_product.url }}">
+                      <img 
+                        src="{{ cross_product.featured_image | image_url: width: 300 }}" 
+                        alt="{{ cross_product.featured_image.alt | default: cross_product.title }}" 
+                        loading="lazy"
+                        width="300"
+                        height="200"
+                      >
+                    </a>
+                  {%- endif -%}
+                  
+                  <h4>
+                    <a href="{{ cross_product.url }}">{{ cross_product.title }}</a>
+                  </h4>
+                  
+                  <div class="price">
+                    {%- if cross_product.compare_at_price > cross_product.price -%}
+                      <span class="price-compare">{{ cross_product.compare_at_price | money }}</span>
+                    {%- endif -%}
+                    <span class="price-current">{{ cross_product.price | money }}</span>
+                  </div>
+                  
+                  <form action="{{ routes.cart_add_url }}" method="post" enctype="multipart/form-data" class="cross-sell-form">
+                    <input type="hidden" name="id" value="{{ cross_product.selected_or_first_available_variant.id }}">
+                    <button 
+                      type="submit" 
+                      class="button--primary cross-sell-add-btn" 
+                      {% unless cross_product.available %}disabled{% endunless %}
+                    >
+                      {%- if cross_product.available -%}
+                        {{ section.settings.button_text | default: 'Adicionar ao Carrinho' }}
+                      {%- else -%}
+                        {{ 'products.product.sold_out' | t }}
+                      {%- endif -%}
+                    </button>
+                  </form>
+                </div>
+              {%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endif -%}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Handle cross-sell form submissions
+  const crossSellForms = document.querySelectorAll('.cross-sell-form');
+  
+  crossSellForms.forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const button = form.querySelector('.cross-sell-add-btn');
+      const originalText = button.textContent;
+      
+      // Show loading state
+      button.textContent = 'Adicionando...';
+      button.disabled = true;
+      
+      fetch('{{ routes.cart_add_url }}', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status) {
+          // Error occurred
+          button.textContent = 'Erro';
+          setTimeout(() => {
+            button.textContent = originalText;
+            button.disabled = false;
+          }, 2000);
+        } else {
+          // Success
+          button.textContent = 'Adicionado!';
+          
+          // Update cart count if cart drawer exists
+          if (window.theme && window.theme.cartDrawer) {
+            window.theme.cartDrawer.refresh();
+          }
+          
+          // Reset button after 2 seconds
+          setTimeout(() => {
+            button.textContent = originalText;
+            button.disabled = false;
+          }, 2000);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        button.textContent = 'Erro';
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.disabled = false;
+        }, 2000);
+      });
+    });
+  });
+});
+</script>
+
+{% schema %}
+{
+  "name": "Produtos Complementares",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "Compre Junto",
+      "label": "Título da Seção"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "default": "Adicionar ao Carrinho",
+      "label": "Texto do Botão"
+    },
+    {
+      "type": "paragraph",
+      "content": "Esta seção mostra produtos que possuem a mesma tag 'complemento-' do produto atual. Para usar, adicione tags como 'complemento-kit-pintura' aos produtos relacionados."
+    },
+    {
+      "type": "header",
+      "content": "Configurações de Espaçamento"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Espaçamento Superior",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Espaçamento Inferior",
+      "default": 36
+    }
+  ],
+  "presets": [
+    {
+      "name": "Produtos Complementares"
+    }
+  ]
+}
+{% endschema %}
